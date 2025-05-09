@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,13 +33,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.loteria_app.components.LoItemType
+import com.example.loteria_app.components.LoNumberTextField
 import com.example.loteria_app.ui.theme.Green
 import com.example.loteria_app.ui.theme.LoteriaappTheme
 
@@ -114,18 +113,10 @@ fun LotteryItem(modifier: Modifier = Modifier, name: String, onClick: () -> Unit
                 .background(Green)
                 .padding(8.dp)
         ) {
-            Image(
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(10.dp),
-                painter = painterResource(id = R.drawable.trevo),
-                contentDescription = stringResource(id = R.string.trevo)
-            )
 
-            Text(
-                text = name,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            LoItemType(
+                name = name,
+                color = Color.White
             )
         }
     }
@@ -146,21 +137,7 @@ fun FormScreen(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Image(
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(10.dp),
-                painter = painterResource(id = R.drawable.trevo),
-                contentDescription = stringResource(id = R.string.trevo)
-            )
-
-            Text(
-                text = "Mega Sena",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            LoItemType(name = "Mega Sena")
 
             Text(
                 text = stringResource(id = R.string.annoucement),
@@ -168,41 +145,29 @@ fun FormScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(8.dp)
             )
 
-            OutlinedTextField(
+            LoNumberTextField(
                 value = qtdNumbers,
-                maxLines = 1,
-                label = {
-                    Text(text = stringResource(id = R.string.mega_rule))
-                },
-                placeholder = { Text(text = stringResource(id = R.string.quantity)) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
+                label = R.string.mega_rule,
                 onValueChange = {
                     if (it.length < 3) {
                         qtdNumbers = validateInput(it)
                     }
-                }
+                },
+                placeholder = R.string.quantity
             )
 
-            OutlinedTextField(
+            LoNumberTextField(
                 value = qtdBets,
-                maxLines = 1,
-                label = {
-                    Text(text = stringResource(id = R.string.bets))
-                },
-                placeholder = { Text(text = stringResource(id = R.string.bets_quantity)) },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
+                label = R.string.bets,
+                imeAction = ImeAction.Done,
                 onValueChange = {
                     if (it.length < 3) {
                         qtdBets = validateInput(it)
                     }
-                }
+                },
+                placeholder = R.string.bets_quantity
             )
+
 
             OutlinedButton(onClick = {}) {
                 Text(text = stringResource(id = R.string.bets_generates))
