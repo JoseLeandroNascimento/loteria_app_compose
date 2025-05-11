@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +28,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +49,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.loteria_app.components.LoItemType
 import com.example.loteria_app.components.LoNumberTextField
+import com.example.loteria_app.model.MainItem
+import com.example.loteria_app.ui.theme.Blue
 import com.example.loteria_app.ui.theme.Green
 import com.example.loteria_app.ui.theme.LoteriaappTheme
 import kotlinx.coroutines.launch
@@ -86,19 +96,32 @@ enum class AppRouter(val route: String) {
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, onClick: () -> Unit) {
 
+    val mainItems = mutableListOf(
+        MainItem(id = 1, "Mega Sena", Green, R.drawable.trevo),
+        MainItem(id = 2, "Quina", Blue, R.drawable.trevo),
+    )
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
 
-        LotteryItem(name = "Mega Sena", onClick = onClick)
+        LazyColumn {
+            items(items = mainItems) {
+                LotteryItem(item = it, onClick = onClick)
+            }
+        }
+
 
     }
 
 }
 
 @Composable
-fun LotteryItem(modifier: Modifier = Modifier, name: String, onClick: () -> Unit) {
+fun LotteryItem(
+    modifier: Modifier = Modifier,
+    item: MainItem,
+    onClick: () -> Unit
+) {
 
     Card(
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
@@ -112,13 +135,15 @@ fun LotteryItem(modifier: Modifier = Modifier, name: String, onClick: () -> Unit
         Column(
             modifier = Modifier
                 .wrapContentSize()
-                .background(Green)
+                .background(item.color)
                 .padding(8.dp)
         ) {
 
             LoItemType(
-                name = name,
-                color = Color.White
+                name = item.name,
+                color = Color.White,
+                bgColor = item.color,
+                icon = item.icon
             )
         }
     }
@@ -134,13 +159,15 @@ fun FormScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     var result by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
-
+    val scrollState = rememberScrollState()
+    var showAlertDialog by remember { mutableStateOf(false) }
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
 
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.verticalScroll(state = scrollState)
         ) {
 
             LoItemType(name = "Mega Sena")
@@ -179,29 +206,34 @@ fun FormScreen(modifier: Modifier = Modifier) {
                 enabled = qtdNumbers.isNotEmpty() && qtdBets.isNotEmpty(),
                 onClick = {
 
-                    if (qtdBets.toInt() < 1 || qtdBets.toInt() > 10) {
+                    val bets = qtdBets.toInt()
+                    val numbers = qtdNumbers.toInt()
+
+                    if (bets < 1 || qtdBets.toInt() > 10) {
 
                         scope.launch {
                             snackBarHostState.showSnackbar("Máximo número de apostas permitidos: 10")
                         }
-                    } else if (qtdNumbers.toInt() < 1 || qtdNumbers.toInt() > 15) {
+                    } else if (numbers.toInt() < 1 || numbers.toInt() > 15) {
                         scope.launch {
                             snackBarHostState.showSnackbar("Números devem ser entre 1 e 15")
                         }
                     } else {
                         result = ""
-                        for (i in 1..qtdBets.toInt()) {
+                        for (i in 1..bets) {
                             result += "[$i] "
                             result += numberGenerator(qtdNumbers)
                             result += "\n\n"
                         }
 
+                        showAlertDialog = true
 
                     }
 
                     keyboardController?.hide()
 
                 }
+
             ) {
                 Text(text = stringResource(id = R.string.bets_generates))
             }
@@ -216,6 +248,34 @@ fun FormScreen(modifier: Modifier = Modifier) {
                 hostState = snackBarHostState
             )
         }
+
+        if (showAlertDialog) {
+
+            AlertDialog(
+                onDismissRequest = {
+                    showAlertDialog = false
+                },
+                title = { Text(text = stringResource(R.string.app_name)) },
+                text = {
+                    Text(text = stringResource(R.string.good_luck))
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showAlertDialog = false
+                    }) {
+                        Text(text = stringResource(id = android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showAlertDialog = false
+                    }) {
+                        Text(text = stringResource(id = android.R.string.cancel))
+                    }
+                }
+            )
+        }
+
     }
 
 }

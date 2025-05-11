@@ -1,5 +1,6 @@
 package com.example.loteria_app.components
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +23,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.loteria_app.R
 
 @Composable
@@ -70,8 +70,9 @@ private fun LoNumberTextFieldPreview() {
 @Composable
 fun LoItemType(
     modifier: Modifier = Modifier,
-    name:String,
-    color:Color = Color.Black,
+    name: String,
+    @DrawableRes icon: Int = R.drawable.trevo,
+    color: Color = Color.Black,
     bgColor: Color = Color.Transparent
 ) {
 
@@ -85,7 +86,7 @@ fun LoItemType(
             modifier = Modifier
                 .size(100.dp)
                 .padding(10.dp),
-            painter = painterResource(id = R.drawable.trevo),
+            painter = painterResource(id =icon),
             contentDescription = stringResource(id = R.string.trevo)
         )
 
