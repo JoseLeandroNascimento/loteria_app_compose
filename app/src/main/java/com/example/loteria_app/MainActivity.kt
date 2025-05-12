@@ -1,6 +1,7 @@
 package com.example.loteria_app
 
 import android.os.Bundle
+import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -72,12 +73,25 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(AppRouter.HOME.route) {
                             HomeScreen(onClick = {
-                                navController.navigate(AppRouter.FORM.route)
+                                val route = when (it.id) {
+                                    1 -> AppRouter.MEGA_SENA
+
+                                    2 -> AppRouter.QUINA
+
+                                    else -> AppRouter.HOME
+
+                                }
+
+                                navController.navigate(route.route)
                             })
                         }
 
-                        composable(AppRouter.FORM.route) {
-                            FormScreen()
+                        composable(AppRouter.MEGA_SENA.route) {
+                            MegaScreen()
+                        }
+
+                        composable(AppRouter.QUINA.route) {
+                            QuinaScreen()
                         }
                     }
                 }
@@ -89,11 +103,12 @@ class MainActivity : ComponentActivity() {
 enum class AppRouter(val route: String) {
 
     HOME("home"),
-    FORM("form")
+    QUINA("quina"),
+    MEGA_SENA("mega_sena")
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun HomeScreen(modifier: Modifier = Modifier, onClick: (item: MainItem) -> Unit) {
 
     val mainItems = mutableListOf(
         MainItem(id = 1, "Mega Sena", Green, R.drawable.trevo),
@@ -109,10 +124,11 @@ fun HomeScreen(modifier: Modifier = Modifier, onClick: () -> Unit) {
             verticalArrangement = Arrangement.SpaceAround
         ) {
             items(items = mainItems) {
-                LotteryItem(item = it, onClick = onClick)
+                LotteryItem(item = it) {
+                    onClick(it)
+                }
             }
         }
-
 
     }
 
@@ -153,7 +169,18 @@ fun LotteryItem(
 }
 
 @Composable
-fun FormScreen(modifier: Modifier = Modifier) {
+fun QuinaScreen(modifier: Modifier = Modifier) {
+
+    Surface(
+        modifier = modifier.fillMaxSize().background(color = Color.Red)
+    ){
+
+    }
+}
+
+
+@Composable
+fun MegaScreen(modifier: Modifier = Modifier) {
 
     var qtdNumbers by remember { mutableStateOf("") }
     var qtdBets by remember { mutableStateOf("") }
@@ -306,7 +333,7 @@ private fun validateInput(value: String): String {
 @Preview
 @Composable
 private fun FormScreenPreview() {
-    FormScreen()
+    MegaScreen()
 }
 
 @Preview
