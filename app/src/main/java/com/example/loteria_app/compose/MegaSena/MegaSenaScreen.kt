@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,7 +47,7 @@ import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MegaScreen(modifier: Modifier = Modifier, onClick: (String) -> Unit) {
+fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: (String) -> Unit) {
 
     val db = (LocalContext.current.applicationContext as App).db
 
@@ -60,7 +61,9 @@ fun MegaScreen(modifier: Modifier = Modifier, onClick: (String) -> Unit) {
     val scrollState = rememberScrollState()
     var showAlertDialog by remember { mutableStateOf(false) }
 
-    val resultToSave = mutableListOf<String>()
+    val resultToSave = remember {
+        mutableListOf<String>()
+    }
 
 
     Scaffold(
@@ -68,6 +71,14 @@ fun MegaScreen(modifier: Modifier = Modifier, onClick: (String) -> Unit) {
             TopAppBar(
                 title = {
                     Text(text = "Apostar")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
+                    }
                 },
                 actions = {
                     IconButton(
