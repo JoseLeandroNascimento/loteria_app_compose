@@ -7,14 +7,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,8 +44,9 @@ import com.example.loteria_app.data.Bet
 import kotlinx.coroutines.launch
 import java.util.Random
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MegaScreen(modifier: Modifier = Modifier) {
+fun MegaScreen(modifier: Modifier = Modifier, onClick: (String) -> Unit) {
 
     val db = (LocalContext.current.applicationContext as App).db
 
@@ -55,130 +63,160 @@ fun MegaScreen(modifier: Modifier = Modifier) {
     val resultToSave = mutableListOf<String>()
 
 
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = "Apostar")
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            onClick("megasena")
+                        }
+                    ) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.verticalScroll(state = scrollState)
+        Surface(
+            modifier = modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
 
-            LoItemType(name = "Mega Sena")
 
-            Text(
-                text = stringResource(id = R.string.annoucement),
-                fontStyle = FontStyle.Italic,
-                modifier = Modifier.padding(8.dp)
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .verticalScroll(state = scrollState)
+            ) {
 
-            LoNumberTextField(
-                value = qtdNumbers,
-                label = R.string.mega_rule,
-                onValueChange = {
-                    if (it.length < 3) {
-                        qtdNumbers = validateInput(it)
-                    }
-                },
-                placeholder = R.string.quantity
-            )
+                LoItemType(name = "Mega Sena")
 
-            LoNumberTextField(
-                value = qtdBets,
-                label = R.string.bets,
-                imeAction = ImeAction.Done,
-                onValueChange = {
-                    if (it.length < 3) {
-                        qtdBets = validateInput(it)
-                    }
-                },
-                placeholder = R.string.bets_quantity
-            )
+                Text(
+                    text = stringResource(id = R.string.annoucement),
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(8.dp)
+                )
 
-
-            OutlinedButton(
-                enabled = qtdNumbers.isNotEmpty() && qtdBets.isNotEmpty(),
-                onClick = {
-
-                    val bets = qtdBets.toInt()
-                    val numbers = qtdNumbers.toInt()
-
-                    if (bets < 1 || qtdBets.toInt() > 10) {
-
-                        scope.launch {
-                            snackBarHostState.showSnackbar("Máximo número de apostas permitidos: 10")
+                LoNumberTextField(
+                    value = qtdNumbers,
+                    label = R.string.mega_rule,
+                    onValueChange = {
+                        if (it.length < 3) {
+                            qtdNumbers = validateInput(it)
                         }
-                    } else if (numbers.toInt() < 1 || numbers.toInt() > 15) {
-                        scope.launch {
-                            snackBarHostState.showSnackbar("Números devem ser entre 1 e 15")
-                        }
-                    } else {
-                        result = ""
-                        resultToSave.clear()
+                    },
+                    placeholder = R.string.quantity
+                )
 
-                        for (i in 1..bets) {
-                            val res = numberGenerator(qtdNumbers)
-                            resultToSave.add(res)
-                            result += "[$i] "
-                            result += res
-                            result += "\n\n"
+                LoNumberTextField(
+                    value = qtdBets,
+                    label = R.string.bets,
+                    imeAction = ImeAction.Done,
+                    onValueChange = {
+                        if (it.length < 3) {
+                            qtdBets = validateInput(it)
+                        }
+                    },
+                    placeholder = R.string.bets_quantity
+                )
+
+
+                OutlinedButton(
+                    enabled = qtdNumbers.isNotEmpty() && qtdBets.isNotEmpty(),
+                    onClick = {
+
+                        val bets = qtdBets.toInt()
+                        val numbers = qtdNumbers.toInt()
+
+                        if (bets < 1 || qtdBets.toInt() > 10) {
+
+                            scope.launch {
+                                snackBarHostState.showSnackbar("Máximo número de apostas permitidos: 10")
+                            }
+                        } else if (numbers.toInt() < 1 || numbers.toInt() > 15) {
+                            scope.launch {
+                                snackBarHostState.showSnackbar("Números devem ser entre 1 e 15")
+                            }
+                        } else {
+                            result = ""
+                            resultToSave.clear()
+
+                            for (i in 1..bets) {
+                                val res = numberGenerator(qtdNumbers)
+                                resultToSave.add(res)
+                                result += "[$i] "
+                                result += res
+                                result += "\n\n"
+                            }
+
+                            showAlertDialog = true
+
                         }
 
-                        showAlertDialog = true
+                        keyboardController?.hide()
 
                     }
 
-                    keyboardController?.hide()
-
+                ) {
+                    Text(text = stringResource(id = R.string.bets_generates))
                 }
 
-            ) {
-                Text(text = stringResource(id = R.string.bets_generates))
+                Text(text = result)
+
+
             }
 
-            Text(text = result)
+            Box {
+                SnackbarHost(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    hostState = snackBarHostState
+                )
+            }
+            if (showAlertDialog) {
 
-
-        }
-        Box {
-            SnackbarHost(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                hostState = snackBarHostState
-            )
-        }
-
-        if (showAlertDialog) {
-
-            AlertDialog(
-                onDismissRequest = {
-                    showAlertDialog = false
-                },
-                title = { Text(text = stringResource(R.string.app_name)) },
-                text = {
-                    Text(text = stringResource(R.string.good_luck))
-                },
-                confirmButton = {
-                    TextButton(onClick = {
+                AlertDialog(
+                    onDismissRequest = {
                         showAlertDialog = false
-                    }) {
-                        Text(text = stringResource(id = android.R.string.ok))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        Thread {
-                            for (res in resultToSave) {
-                                val bet = Bet(type = "megasena", numbers = res)
-                                db.betDao().insert(bet)
-                            }
-                        }.start()
+                    },
+                    title = { Text(text = stringResource(R.string.app_name)) },
+                    text = {
+                        Text(text = stringResource(R.string.good_luck))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showAlertDialog = false
+                            onClick("megasena")
 
-                        showAlertDialog = false
-                    }) {
-                        Text(text = stringResource(id = R.string.save))
+                        }) {
+                            Text(text = stringResource(id = android.R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            Thread {
+                                for (res in resultToSave) {
+                                    val bet = Bet(type = "megasena", numbers = res)
+                                    db.betDao().insert(bet)
+                                }
+                            }.start()
+
+                            showAlertDialog = false
+                        }) {
+                            Text(text = stringResource(id = R.string.save))
+                        }
                     }
-                }
-            )
+                )
+            }
         }
+
 
     }
 }
