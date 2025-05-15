@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,12 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.loteria_app.App
 import com.example.loteria_app.R
+import com.example.loteria_app.components.AutoTextDropDown
 import com.example.loteria_app.components.LoItemType
 import com.example.loteria_app.components.LoNumberTextField
 import com.example.loteria_app.data.Bet
@@ -65,6 +68,8 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
         mutableListOf<String>()
     }
 
+    val rules = stringArrayResource(id = R.array.array_bet_rules)
+    var selectItem by remember { mutableStateOf(rules.first()) }
 
     Scaffold(
         topBar = {
@@ -139,6 +144,16 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     placeholder = R.string.bets_quantity
                 )
 
+                Column(modifier.width(280.dp)) {
+
+                    AutoTextDropDown(
+                        label = stringResource(id = R.string.bet_rule),
+                        value = selectItem,
+                        list = rules.toList(),
+                        onSelect = {}
+                    )
+                }
+
 
                 OutlinedButton(
                     enabled = qtdNumbers.isNotEmpty() && qtdBets.isNotEmpty(),
@@ -161,7 +176,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                             resultToSave.clear()
 
                             for (i in 1..bets) {
-                                val res = numberGenerator(qtdNumbers)
+                                val res = numberGenerator(qtdNumbers, rules.indexOf(selectItem))
                                 resultToSave.add(res)
                                 result += "[$i] "
                                 result += res
@@ -204,7 +219,6 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     confirmButton = {
                         TextButton(onClick = {
                             showAlertDialog = false
-                            onClick("megasena")
 
                         }) {
                             Text(text = stringResource(id = android.R.string.ok))
@@ -233,11 +247,18 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
 }
 
 
-private fun numberGenerator(qtd: String): String {
+private fun numberGenerator(qtd: String, rule: Int): String {
     val numbers = mutableSetOf<Int>()
 
     while (true) {
         val n = Random().nextInt(60)
+
+        if (rule == 1) {
+            if (n % 2 == 0) continue
+        } else if (rule == 2) {
+            if (n % 2 != 0) continue
+        }
+
         numbers.add(n + 1)
 
         if (numbers.size == qtd.toInt()) break
