@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,34 +40,37 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.loteria_app.App
 import com.example.loteria_app.R
 import com.example.loteria_app.components.AutoTextDropDown
 import com.example.loteria_app.components.LoItemType
 import com.example.loteria_app.components.LoNumberTextField
-import com.example.loteria_app.data.Bet
+import com.example.loteria_app.viewmodel.BetViewModel
 import kotlinx.coroutines.launch
-import java.util.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: (String) -> Unit) {
+fun MegaScreen(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onClick: (String) -> Unit,
+    betViewModel: BetViewModel = viewModel(factory = BetViewModel.Factory)
+) {
 
     val db = (LocalContext.current.applicationContext as App).db
 
-    var qtdNumbers by remember { mutableStateOf("") }
-    var qtdBets by remember { mutableStateOf("") }
+    val qtdNumbers = betViewModel.qtdNumbers
+    val qtdBets = betViewModel.qtdBets
+
+    val result = betViewModel.result.observeAsState("").value
+
     val snackBarHostState by remember { mutableStateOf(SnackbarHostState()) }
     val scope = rememberCoroutineScope()
-    var result by remember { mutableStateOf("") }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
-    var showAlertDialog by remember { mutableStateOf(false) }
-
-    val resultToSave = remember {
-        mutableListOf<String>()
-    }
+    val showAlertDialog = betViewModel.showAlert.observeAsState(false).value
 
     val rules = stringArrayResource(id = R.array.array_bet_rules)
     var selectItem by remember { mutableStateOf(rules.first()) }
@@ -125,9 +129,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     value = qtdNumbers,
                     label = R.string.mega_rule,
                     onValueChange = {
-                        if (it.length < 3) {
-                            qtdNumbers = validateInput(it)
-                        }
+                        betViewModel.updateQtdNumbers(it)
                     },
                     placeholder = R.string.quantity
                 )
@@ -137,9 +139,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     label = R.string.bets,
                     imeAction = ImeAction.Done,
                     onValueChange = {
-                        if (it.length < 3) {
-                            qtdBets = validateInput(it)
-                        }
+                        betViewModel.updateQtdBets(it)
                     },
                     placeholder = R.string.bets_quantity
                 )
@@ -172,18 +172,8 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                                 snackBarHostState.showSnackbar("Números devem ser entre 1 e 15")
                             }
                         } else {
-                            result = ""
-                            resultToSave.clear()
-
-                            for (i in 1..bets) {
-                                val res = numberGenerator(qtdNumbers, rules.indexOf(selectItem))
-                                resultToSave.add(res)
-                                result += "[$i] "
-                                result += res
-                                result += "\n\n"
-                            }
-
-                            showAlertDialog = true
+                            val rule = rules.indexOf(selectItem)
+                            betViewModel.updateNumbers(rule)
 
                         }
 
@@ -197,7 +187,6 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
 
                 Text(text = result)
 
-
             }
 
             Box {
@@ -210,7 +199,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
 
                 AlertDialog(
                     onDismissRequest = {
-                        showAlertDialog = false
+                        betViewModel.dismissAlert()
                     },
                     title = { Text(text = stringResource(R.string.app_name)) },
                     text = {
@@ -218,7 +207,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     },
                     confirmButton = {
                         TextButton(onClick = {
-                            showAlertDialog = false
+                            betViewModel.dismissAlert()
 
                         }) {
                             Text(text = stringResource(id = android.R.string.ok))
@@ -226,14 +215,7 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
                     },
                     dismissButton = {
                         TextButton(onClick = {
-                            Thread {
-                                for (res in resultToSave) {
-                                    val bet = Bet(type = "megasena", numbers = res)
-                                    db.betDao().insert(bet)
-                                }
-                            }.start()
-
-                            showAlertDialog = false
+                          betViewModel.saveBet("megasena")
                         }) {
                             Text(text = stringResource(id = R.string.save))
                         }
@@ -246,31 +228,3 @@ fun MegaScreen(modifier: Modifier = Modifier, onBackClick: () -> Unit, onClick: 
     }
 }
 
-
-private fun numberGenerator(qtd: String, rule: Int): String {
-    val numbers = mutableSetOf<Int>()
-
-    while (true) {
-        val n = Random().nextInt(60)
-
-        if (rule == 1) {
-            if (n % 2 == 0) continue
-        } else if (rule == 2) {
-            if (n % 2 != 0) continue
-        }
-
-        numbers.add(n + 1)
-
-        if (numbers.size == qtd.toInt()) break
-
-    }
-
-    return numbers.joinToString(" - ")
-}
-
-private fun validateInput(value: String): String {
-
-    return value.filter {
-        it in "0123456789"
-    }
-}

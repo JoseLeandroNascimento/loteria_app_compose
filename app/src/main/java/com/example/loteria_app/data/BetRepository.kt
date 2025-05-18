@@ -6,18 +6,20 @@ class BetRepository(private val dao: BetDao) {
 
         private var instance: BetRepository? = null
 
-        fun getInstance(betDao: BetDao) {
+        fun getInstance(betDao: BetDao): BetRepository {
             instance ?: BetRepository(betDao).also {
                 instance = it
             }
+
+            return instance!!
         }
     }
 
-    fun getBets(type: String): List<Bet> {
+    suspend fun getBets(type: String): List<Bet> {
         return dao.getNumbersByType(type)
     }
 
-    fun insertBet(bet: Bet) {
+    suspend fun insertBet(bet: Bet) {
         dao.insert(bet)
     }
 

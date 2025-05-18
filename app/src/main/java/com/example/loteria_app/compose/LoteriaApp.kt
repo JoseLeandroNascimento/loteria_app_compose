@@ -64,14 +64,17 @@ fun LoteriaNavHost(modifier: Modifier = Modifier, navController: NavHostControll
         ) {
             val type = it.arguments?.getString("type") ?: throw Exception("Tipo não encontrado")
 
-            BetsListScreen(type = type)
+            BetsListScreen()
 
         }
 
         composable(AppRouter.MEGA_SENA.route) {
-            MegaScreen(onBackClick = { navController.navigateUp() }) {
-                navController.navigate((AppRouter.BET_LIST_DETAILS.route + "/$it"))
-            }
+            MegaScreen(
+                onBackClick = { navController.navigateUp() },
+                onClick = {
+                    navController.navigate((AppRouter.BET_LIST_DETAILS.route + "/$it"))
+                }
+            )
         }
 
         composable(AppRouter.QUINA.route) {
